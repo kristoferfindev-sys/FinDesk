@@ -32,4 +32,5 @@ python3 server.py
 
 - Appen försöker hämta live-data från Yahoo Finance.
 - Om extern åtkomst blockeras används en lokal fallback-serie så dashboarden fortsätter fungera utan avbrott.
+- Om `/api/ohlc` inte finns (t.ex. om man råkar köra en statisk server) använder frontend också en lokal fallback, så sidan visar fortfarande portföljförslag.
 - Svar cachas i 1 timme på serversidan för stabilare laddning.
