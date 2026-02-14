@@ -1,219 +1,279 @@
 const STOCK_UNIVERSE = [
-  { ticker: 'AAPL', market: 'USA', price: 198.2, ytd: 0.14, sinceStart: 0.52, score: 92 },
-  { ticker: 'MSFT', market: 'USA', price: 425.6, ytd: 0.18, sinceStart: 0.65, score: 95 },
-  { ticker: 'NVDA', market: 'USA', price: 889.5, ytd: 0.32, sinceStart: 1.2, score: 97 },
-  { ticker: 'ABB', market: 'Sverige', price: 82.4, ytd: 0.11, sinceStart: 0.33, score: 81 },
-  { ticker: 'VOLV-B', market: 'Sverige', price: 31.8, ytd: 0.09, sinceStart: 0.4, score: 84 },
-  { ticker: 'ATCO-A', market: 'Sverige', price: 16.5, ytd: 0.06, sinceStart: 0.21, score: 77 },
-  { ticker: 'ASML', market: 'Nederländerna', price: 978.1, ytd: 0.2, sinceStart: 0.58, score: 93 },
-  { ticker: 'NOVO-B', market: 'Danmark', price: 133.5, ytd: 0.17, sinceStart: 0.5, score: 89 },
-  { ticker: 'NESN', market: 'Schweiz', price: 113.2, ytd: 0.07, sinceStart: 0.24, score: 78 },
-  { ticker: 'BMW', market: 'Tyskland', price: 106.9, ytd: 0.08, sinceStart: 0.28, score: 76 },
-  { ticker: 'SHOP', market: 'Kanada', price: 78.4, ytd: 0.12, sinceStart: 0.41, score: 83 },
-  { ticker: 'TSM', market: 'Taiwan', price: 146.7, ytd: 0.22, sinceStart: 0.73, score: 90 },
-  { ticker: 'SONY', market: 'Japan', price: 88.4, ytd: 0.05, sinceStart: 0.2, score: 74 },
-  { ticker: 'BHP', market: 'Australien', price: 47.1, ytd: 0.04, sinceStart: 0.19, score: 71 },
-  { ticker: 'MELI', market: 'USA', price: 1704.3, ytd: 0.16, sinceStart: 0.56, score: 88 },
-  { ticker: 'META', market: 'USA', price: 491.4, ytd: 0.24, sinceStart: 0.79, score: 96 },
-  { ticker: 'AMZN', market: 'USA', price: 177.7, ytd: 0.15, sinceStart: 0.63, score: 91 },
-  { ticker: 'ORCL', market: 'USA', price: 126.5, ytd: 0.13, sinceStart: 0.39, score: 80 },
-  { ticker: 'LIN', market: 'USA', price: 461.3, ytd: 0.1, sinceStart: 0.35, score: 79 },
-  { ticker: 'SAP', market: 'Tyskland', price: 181.5, ytd: 0.09, sinceStart: 0.27, score: 75 },
-  { ticker: 'RIO', market: 'Storbritannien', price: 66.2, ytd: 0.03, sinceStart: 0.15, score: 69 },
-  { ticker: 'UL', market: 'Storbritannien', price: 51.6, ytd: 0.04, sinceStart: 0.17, score: 68 },
-  { ticker: 'SAN', market: 'Spanien', price: 5.1, ytd: 0.07, sinceStart: 0.2, score: 67 },
-  { ticker: 'IBE', market: 'Spanien', price: 12.8, ytd: 0.05, sinceStart: 0.18, score: 66 },
-  { ticker: 'SU', market: 'Kanada', price: 35.3, ytd: 0.06, sinceStart: 0.22, score: 70 },
-  { ticker: 'SQM', market: 'Chile', price: 48.9, ytd: -0.02, sinceStart: 0.08, score: 60 },
-  { ticker: 'PBR', market: 'Brasilien', price: 14.7, ytd: 0.01, sinceStart: 0.1, score: 62 },
-  { ticker: 'HDB', market: 'Indien', price: 62.6, ytd: 0.11, sinceStart: 0.32, score: 82 },
-  { ticker: 'RELIANCE', market: 'Indien', price: 34.4, ytd: 0.12, sinceStart: 0.3, score: 85 },
-  { ticker: 'NVO', market: 'Danmark', price: 134.3, ytd: 0.16, sinceStart: 0.49, score: 87 },
-  { ticker: 'ENEL', market: 'Italien', price: 7.1, ytd: 0.04, sinceStart: 0.16, score: 65 },
-  { ticker: 'ALV', market: 'Frankrike', price: 18.2, ytd: 0.05, sinceStart: 0.19, score: 64 },
-  { ticker: 'RDSA', market: 'Nederländerna', price: 33.7, ytd: 0.06, sinceStart: 0.23, score: 73 },
-  { ticker: 'DB1', market: 'Tyskland', price: 209.9, ytd: 0.08, sinceStart: 0.26, score: 72 },
-  { ticker: 'ERIC-B', market: 'Sverige', price: 6.4, ytd: -0.01, sinceStart: 0.11, score: 63 },
-  { ticker: 'SEB-A', market: 'Sverige', price: 15.8, ytd: 0.05, sinceStart: 0.18, score: 74 },
-  { ticker: 'TEL2-B', market: 'Sverige', price: 9.5, ytd: 0.02, sinceStart: 0.12, score: 61 },
-  { ticker: 'ROG', market: 'Schweiz', price: 300.1, ytd: 0.04, sinceStart: 0.2, score: 70 },
-  { ticker: 'RACE', market: 'Italien', price: 412.6, ytd: 0.14, sinceStart: 0.45, score: 86 },
-  { ticker: 'INFY', market: 'Indien', price: 20.7, ytd: 0.08, sinceStart: 0.22, score: 76 },
-  { ticker: 'TOYOTA', market: 'Japan', price: 24.8, ytd: 0.09, sinceStart: 0.31, score: 79 }
+  { ticker: 'AAPL', market: 'USA' }, { ticker: 'MSFT', market: 'USA' }, { ticker: 'NVDA', market: 'USA' },
+  { ticker: 'META', market: 'USA' }, { ticker: 'AMZN', market: 'USA' }, { ticker: 'ABB', market: 'Sverige' },
+  { ticker: 'VOLV-B', market: 'Sverige' }, { ticker: 'ATCO-A', market: 'Sverige' }, { ticker: 'SEB-A', market: 'Sverige' },
+  { ticker: 'ERIC-B', market: 'Sverige' }, { ticker: 'TEL2-B', market: 'Sverige' }, { ticker: 'ASML', market: 'Nederländerna' },
+  { ticker: 'NOVO-B', market: 'Danmark' }, { ticker: 'NVO', market: 'Danmark' }, { ticker: 'NESN', market: 'Schweiz' },
+  { ticker: 'BMW', market: 'Tyskland' }, { ticker: 'SAP', market: 'Tyskland' }, { ticker: 'DB1', market: 'Tyskland' },
+  { ticker: 'SHOP', market: 'Kanada' }, { ticker: 'SU', market: 'Kanada' }, { ticker: 'TSM', market: 'Taiwan' },
+  { ticker: 'SONY', market: 'Japan' }, { ticker: 'TOYOTA', market: 'Japan' }, { ticker: 'BHP', market: 'Australien' },
+  { ticker: 'MELI', market: 'USA' }, { ticker: 'ORCL', market: 'USA' }, { ticker: 'LIN', market: 'USA' },
+  { ticker: 'RIO', market: 'Storbritannien' }, { ticker: 'UL', market: 'Storbritannien' }, { ticker: 'SAN', market: 'Spanien' },
+  { ticker: 'IBE', market: 'Spanien' }, { ticker: 'SQM', market: 'Chile' }, { ticker: 'PBR', market: 'Brasilien' },
+  { ticker: 'HDB', market: 'Indien' }, { ticker: 'RELIANCE', market: 'Indien' }, { ticker: 'ENEL', market: 'Italien' },
+  { ticker: 'ALV', market: 'Frankrike' }, { ticker: 'RDSA', market: 'Nederländerna' }, { ticker: 'ROG', market: 'Schweiz' },
+  { ticker: 'RACE', market: 'Italien' }, { ticker: 'INFY', market: 'Indien' }
 ];
-
 const portfolioSizes = [10, 20, 40];
-const BENCHMARK = { name: 'S&P 500', ytd: 0.11, sinceStart: 0.38 };
+const BENCHMARK_TICKER = 'SPY';
 
-const lastUpdated = document.getElementById('lastUpdated');
-const marketFilters = document.getElementById('marketFilters');
-const portfolioCards = document.getElementById('portfolioCards');
-const performanceBoard = document.getElementById('performanceBoard');
-const portfolioSizeInput = document.getElementById('portfolioSize');
-const riskModeInput = document.getElementById('riskMode');
+const el = {
+  lastUpdated: document.getElementById('lastUpdated'),
+  marketFilters: document.getElementById('marketFilters'),
+  portfolioCards: document.getElementById('portfolioCards'),
+  performanceBoard: document.getElementById('performanceBoard'),
+  portfolioSize: document.getElementById('portfolioSize'),
+  riskMode: document.getElementById('riskMode'),
+  modal: document.getElementById('chartModal'),
+  closeModal: document.getElementById('closeModal'),
+  modalTitle: document.getElementById('modalTitle'),
+  modalSummary: document.getElementById('modalSummary'),
+  chartContainer: document.getElementById('chartContainer')
+};
 
-function formatSEK(value) {
-  return new Intl.NumberFormat('sv-SE', { style: 'currency', currency: 'SEK', maximumFractionDigits: 0 }).format(value);
+const marketDataCache = new Map();
+let chart = null;
+let currentSymbol = null;
+
+const formatSEK = (v) => new Intl.NumberFormat('sv-SE', { style: 'currency', currency: 'SEK', maximumFractionDigits: 2 }).format(v);
+const formatPct = (v) => `${(v * 100).toFixed(2)}%`;
+const avg = (arr) => arr.reduce((s, n) => s + n, 0) / arr.length;
+
+function sma(values, period) {
+  const out = [];
+  for (let i = period - 1; i < values.length; i += 1) {
+    out.push({ index: i, value: avg(values.slice(i - period + 1, i + 1)) });
+  }
+  return out;
 }
 
-function formatPct(value) {
-  return `${(value * 100).toFixed(2)}%`;
-}
-
-function getMarkets() {
-  return [...new Set(STOCK_UNIVERSE.map((stock) => stock.market))].sort();
-}
-
-function renderMarketFilters() {
-  const markets = getMarkets();
-  marketFilters.innerHTML = '';
-
-  markets.forEach((market) => {
-    const id = `market-${market}`;
-    const label = document.createElement('label');
-    label.innerHTML = `<input id="${id}" data-market="${market}" type="checkbox" checked /> ${market}`;
-    marketFilters.appendChild(label);
+function ema(values, period) {
+  const k = 2 / (period + 1);
+  const out = [];
+  let prev = values[0];
+  values.forEach((v, idx) => {
+    prev = idx === 0 ? v : (v * k + prev * (1 - k));
+    out.push(prev);
   });
+  return out;
+}
+
+function rsi(values, period = 14) {
+  if (values.length < period + 1) return 50;
+  let gains = 0;
+  let losses = 0;
+  for (let i = values.length - period; i < values.length; i += 1) {
+    const delta = values[i] - values[i - 1];
+    if (delta > 0) gains += delta;
+    else losses -= delta;
+  }
+  if (losses === 0) return 100;
+  const rs = gains / losses;
+  return 100 - (100 / (1 + rs));
+}
+
+function macd(values) {
+  const e12 = ema(values, 12);
+  const e26 = ema(values, 26);
+  const macdLine = values.map((_, i) => e12[i] - e26[i]);
+  const signal = ema(macdLine, 9);
+  return { macd: macdLine.at(-1), signal: signal.at(-1) };
+}
+
+function calculateAnalysis(candles) {
+  const closes = candles.map((c) => c.close);
+  const last = closes.at(-1);
+  const ytdStart = candles.find((c) => new Date(c.time * 1000).getUTCMonth() === 0)?.close || closes[0];
+  const sinceStart = (last - closes[0]) / closes[0];
+  const ytd = (last - ytdStart) / ytdStart;
+  const sma20 = sma(closes, 20).at(-1)?.value || last;
+  const sma50 = sma(closes, 50).at(-1)?.value || last;
+  const rsiVal = rsi(closes);
+  const macdVal = macd(closes);
+
+  let score = 0;
+  if (last > sma20) score += 1;
+  if (sma20 > sma50) score += 1;
+  if (rsiVal > 45 && rsiVal < 70) score += 1;
+  if (macdVal.macd > macdVal.signal) score += 1;
+
+  return { last, ytd, sinceStart, sma20, sma50, rsi: rsiVal, macd: macdVal, score };
+}
+
+async function fetchSymbolData(symbol) {
+  if (marketDataCache.has(symbol)) return marketDataCache.get(symbol);
+  const res = await fetch(`/api/ohlc?symbol=${encodeURIComponent(symbol)}`);
+  if (!res.ok) throw new Error(`Kunde inte hämta data för ${symbol}`);
+  const payload = await res.json();
+  const analysis = calculateAnalysis(payload.candles);
+  const full = { ...payload, analysis };
+  marketDataCache.set(symbol, full);
+  return full;
 }
 
 function selectedMarkets() {
-  return [...marketFilters.querySelectorAll('input:checked')].map((input) => input.dataset.market);
+  return [...el.marketFilters.querySelectorAll('input:checked')].map((i) => i.dataset.market);
 }
 
-function hourlyPrice(basePrice) {
-  const noise = (Math.random() - 0.5) * 0.04;
-  return basePrice * (1 + noise);
+function renderMarketFilters() {
+  const markets = [...new Set(STOCK_UNIVERSE.map((s) => s.market))].sort();
+  el.marketFilters.innerHTML = '';
+  markets.forEach((market) => {
+    const label = document.createElement('label');
+    label.innerHTML = `<input type="checkbox" data-market="${market}" checked/> ${market}`;
+    el.marketFilters.appendChild(label);
+  });
 }
 
-function createPosition(stock, allocation, riskMode) {
-  const buyPrice = hourlyPrice(stock.price);
-  const shares = Math.max(1, Math.floor(allocation / buyPrice));
-  const stopLoss = buyPrice * 0.92;
-  const trailingStop = buyPrice * 0.9;
+function riskText(position, mode) {
+  if (mode === 'stop') return `Stop-loss: ${formatSEK(position.stopLoss)}`;
+  if (mode === 'trailing') return `Glidande stop-loss: ${formatSEK(position.trailingStop)}`;
+  return `Stop-loss: ${formatSEK(position.stopLoss)} · Glidande stop-loss: ${formatSEK(position.trailingStop)}`;
+}
 
+function createPosition(stock, capitalPerStock, analysis) {
+  const shares = Math.max(1, Math.floor(capitalPerStock / analysis.last));
   return {
-    ticker: stock.ticker,
-    market: stock.market,
+    ...stock,
     shares,
-    buyPrice,
-    stopLoss,
-    trailingStop,
-    ytd: stock.ytd,
-    sinceStart: stock.sinceStart,
-    riskMode
+    buyPrice: analysis.last,
+    stopLoss: analysis.last * 0.92,
+    trailingStop: analysis.last * 0.9,
+    ytd: analysis.ytd,
+    sinceStart: analysis.sinceStart,
+    analysis
   };
 }
 
-function buildPortfolio(stockCount, totalCapital, riskMode, markets) {
-  const filtered = STOCK_UNIVERSE
-    .filter((stock) => markets.includes(stock.market))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, stockCount);
-
-  const allocation = totalCapital / Math.max(filtered.length, 1);
-  return filtered.map((stock) => createPosition(stock, allocation, riskMode));
-}
-
-function positionRiskText(position, riskMode) {
-  if (riskMode === 'stop') {
-    return `Stop-loss: ${formatSEK(position.stopLoss)}`;
-  }
-  if (riskMode === 'trailing') {
-    return `Glidande stop-loss: ${formatSEK(position.trailingStop)}`;
-  }
-  return `Stop-loss: ${formatSEK(position.stopLoss)} · Glidande stop-loss: ${formatSEK(position.trailingStop)}`;
+async function rankedStocks(markets) {
+  const universe = STOCK_UNIVERSE.filter((s) => markets.includes(s.market));
+  const enriched = await Promise.all(universe.map(async (stock) => {
+    try {
+      const data = await fetchSymbolData(stock.ticker);
+      return { ...stock, data, score: data.analysis.score };
+    } catch {
+      return null;
+    }
+  }));
+  return enriched.filter(Boolean).sort((a, b) => b.score - a.score || b.data.analysis.ytd - a.data.analysis.ytd);
 }
 
 function renderPortfolioCard(stockCount, positions, riskMode) {
   const card = document.createElement('article');
   card.className = 'portfolio-card';
   card.innerHTML = `<h3>${stockCount} aktier</h3>`;
-
   const list = document.createElement('ul');
-  positions.forEach((position) => {
+  positions.forEach((p) => {
     const item = document.createElement('li');
-    item.innerHTML = `
-      <strong>${position.ticker}</strong> (${position.market})<br />
-      Köp: ${formatSEK(position.buyPrice)} · Antal: ${position.shares}<br />
-      ${positionRiskText(position, riskMode)}
-    `;
+    const button = document.createElement('button');
+    button.className = 'stock-btn';
+    button.innerHTML = `<strong>${p.ticker}</strong> (${p.market})<br/>Köp: ${formatSEK(p.buyPrice)} · Antal: ${p.shares}<br/>${riskText(p, riskMode)}<br/>TA: RSI ${p.analysis.rsi.toFixed(1)}, SMA20 ${p.analysis.sma20.toFixed(2)}, SMA50 ${p.analysis.sma50.toFixed(2)}`;
+    button.addEventListener('click', () => openChartModal(p.ticker));
+    item.appendChild(button);
     list.appendChild(item);
   });
-
   card.appendChild(list);
   return card;
 }
 
-function aggregatePerformance(positions) {
-  if (!positions.length) {
-    return { ytd: 0, sinceStart: 0 };
-  }
-
-  const ytd = positions.reduce((sum, p) => sum + p.ytd, 0) / positions.length;
-  const sinceStart = positions.reduce((sum, p) => sum + p.sinceStart, 0) / positions.length;
-
-  return { ytd, sinceStart };
-}
-
-function renderPerformance(resultSet) {
-  performanceBoard.innerHTML = '';
-
-  resultSet.forEach(({ count, performance }) => {
-    const ytdDelta = performance.ytd - BENCHMARK.ytd;
-    const sinceDelta = performance.sinceStart - BENCHMARK.sinceStart;
-
+function renderPerformance(results, benchmark) {
+  el.performanceBoard.innerHTML = '';
+  results.forEach(({ count, perf }) => {
+    const ytdDelta = perf.ytd - benchmark.ytd;
+    const sinceDelta = perf.sinceStart - benchmark.sinceStart;
     const card = document.createElement('div');
     card.className = 'kpi';
-    card.innerHTML = `
-      <div class="label">${count} aktier – YTD</div>
-      <div class="value ${ytdDelta >= 0 ? 'good' : 'bad'}">${formatPct(performance.ytd)}</div>
-      <div class="label">vs ${BENCHMARK.name}: ${ytdDelta >= 0 ? '+' : ''}${formatPct(ytdDelta)}</div>
-      <hr />
+    card.innerHTML = `<div class="label">${count} aktier – YTD</div>
+      <div class="value ${ytdDelta >= 0 ? 'good' : 'bad'}">${formatPct(perf.ytd)}</div>
+      <div class="label">vs S&P 500: ${ytdDelta >= 0 ? '+' : ''}${formatPct(ytdDelta)}</div><hr/>
       <div class="label">Sedan start</div>
-      <div class="value ${sinceDelta >= 0 ? 'good' : 'bad'}">${formatPct(performance.sinceStart)}</div>
-      <div class="label">vs ${BENCHMARK.name}: ${sinceDelta >= 0 ? '+' : ''}${formatPct(sinceDelta)}</div>
-    `;
-
-    performanceBoard.appendChild(card);
+      <div class="value ${sinceDelta >= 0 ? 'good' : 'bad'}">${formatPct(perf.sinceStart)}</div>
+      <div class="label">vs S&P 500: ${sinceDelta >= 0 ? '+' : ''}${formatPct(sinceDelta)}</div>`;
+    el.performanceBoard.appendChild(card);
   });
 }
 
-function updateTimestamp() {
-  const now = new Date();
-  lastUpdated.textContent = `Senast uppdaterad: ${now.toLocaleString('sv-SE')} (uppdateras varje timme)`;
+function aggregatePerformance(positions) {
+  return {
+    ytd: avg(positions.map((p) => p.ytd)),
+    sinceStart: avg(positions.map((p) => p.sinceStart))
+  };
 }
 
-function generate() {
-  const totalCapital = Number(portfolioSizeInput.value) || 0;
-  const riskMode = riskModeInput.value;
+async function generate() {
+  const totalCapital = Number(el.portfolioSize.value) || 0;
+  const riskMode = el.riskMode.value;
   const markets = selectedMarkets();
+  if (!markets.length) return;
 
-  portfolioCards.innerHTML = '';
+  el.portfolioCards.innerHTML = '<p>Laddar marknadsdata och teknisk analys...</p>';
+  const ranked = await rankedStocks(markets);
+  const benchmark = (await fetchSymbolData(BENCHMARK_TICKER)).analysis;
+  el.portfolioCards.innerHTML = '';
 
-  if (!markets.length) {
-    portfolioCards.innerHTML = '<p>Välj minst en marknad för att generera förslag.</p>';
-    performanceBoard.innerHTML = '';
-    return;
-  }
-
-  const performanceResult = [];
-
+  const perfResults = [];
   portfolioSizes.forEach((count) => {
-    const positions = buildPortfolio(count, totalCapital, riskMode, markets);
-    portfolioCards.appendChild(renderPortfolioCard(count, positions, riskMode));
-    performanceResult.push({ count, performance: aggregatePerformance(positions) });
+    const picks = ranked.slice(0, Math.min(count, ranked.length));
+    const perStock = totalCapital / Math.max(picks.length, 1);
+    const positions = picks.map((s) => createPosition(s, perStock, s.data.analysis));
+    el.portfolioCards.appendChild(renderPortfolioCard(count, positions, riskMode));
+    perfResults.push({ count, perf: aggregatePerformance(positions) });
   });
 
-  renderPerformance(performanceResult);
-  updateTimestamp();
+  renderPerformance(perfResults, benchmark);
+  el.lastUpdated.textContent = `Senast uppdaterad: ${new Date().toLocaleString('sv-SE')} (nästa uppdatering om 1h)`;
+}
+
+async function openChartModal(symbol) {
+  currentSymbol = symbol;
+  const data = await fetchSymbolData(symbol);
+  const candles = data.candles.map((c) => ({
+    time: c.time,
+    open: c.open,
+    high: c.high,
+    low: c.low,
+    close: c.close
+  }));
+  const closes = candles.map((c) => c.close);
+  const sma20Data = sma(closes, 20).map((p) => ({ time: candles[p.index].time, value: p.value }));
+  const sma50Data = sma(closes, 50).map((p) => ({ time: candles[p.index].time, value: p.value }));
+
+  el.modal.classList.remove('hidden');
+  el.modalTitle.textContent = `${symbol} – Candle sticks & teknisk analys`;
+  el.modalSummary.textContent = `Källa: ${data.source === 'yahoo' ? 'Yahoo Finance (live)' : 'Lokal fallback'} · RSI(14): ${data.analysis.rsi.toFixed(2)} · MACD: ${data.analysis.macd.macd.toFixed(3)} / Signal: ${data.analysis.macd.signal.toFixed(3)}`;
+  el.chartContainer.innerHTML = '';
+
+  chart = LightweightCharts.createChart(el.chartContainer, {
+    layout: { background: { color: '#ffffff' }, textColor: '#1f2a44' },
+    grid: { vertLines: { color: '#f0f3fa' }, horzLines: { color: '#f0f3fa' } },
+    rightPriceScale: { borderColor: '#d9e3f5' },
+    timeScale: { borderColor: '#d9e3f5' }
+  });
+
+  const candlestickSeries = chart.addCandlestickSeries({
+    upColor: '#26a69a', downColor: '#ef5350', borderVisible: false, wickUpColor: '#26a69a', wickDownColor: '#ef5350'
+  });
+  candlestickSeries.setData(candles);
+
+  const sma20Series = chart.addLineSeries({ color: '#2962FF', lineWidth: 2, title: 'SMA20' });
+  sma20Series.setData(sma20Data);
+  const sma50Series = chart.addLineSeries({ color: '#FF6D00', lineWidth: 2, title: 'SMA50' });
+  sma50Series.setData(sma50Data);
+
+  chart.timeScale().fitContent();
+}
+
+function closeModal() {
+  el.modal.classList.add('hidden');
+  if (chart) chart.remove();
+  chart = null;
+  currentSymbol = null;
 }
 
 function resetDefaults() {
-  portfolioSizeInput.value = 1000000;
-  riskModeInput.value = 'both';
-  [...marketFilters.querySelectorAll('input')].forEach((input) => {
-    input.checked = true;
-  });
+  el.portfolioSize.value = 1000000;
+  el.riskMode.value = 'both';
+  [...el.marketFilters.querySelectorAll('input')].forEach((i) => { i.checked = true; });
   generate();
 }
 
@@ -221,4 +281,9 @@ renderMarketFilters();
 generate();
 document.getElementById('generateBtn').addEventListener('click', generate);
 document.getElementById('resetBtn').addEventListener('click', resetDefaults);
-setInterval(generate, 60 * 60 * 1000);
+el.closeModal.addEventListener('click', closeModal);
+el.modal.addEventListener('click', (e) => { if (e.target === el.modal) closeModal(); });
+setInterval(() => {
+  marketDataCache.clear();
+  if (!currentSymbol) generate();
+}, 60 * 60 * 1000);

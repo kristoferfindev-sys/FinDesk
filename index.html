@@ -5,14 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FinDesk – Investeringsdashboard</title>
     <link rel="stylesheet" href="styles.css" />
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
   </head>
   <body>
     <header class="hero">
       <h1>FinDesk – Investeringsdashboard</h1>
-      <p>
-        Bygg förslag på portföljer med tydliga köp- och risknivåer, samt jämförelse mot
-        S&amp;P 500.
-      </p>
+      <p>Faktiska marknadsdata, teknisk analys och portföljförslag med risknivåer.</p>
       <p class="meta" id="lastUpdated"></p>
     </header>
 
@@ -36,7 +34,7 @@
         </div>
 
         <fieldset>
-          <legend>Marknader (standard: alla med stöd för stop-loss på Avanza)</legend>
+          <legend>Marknader (standard: tillgängliga marknader med stop-loss-stöd via Avanza-flöde)</legend>
           <div id="marketFilters" class="market-filters"></div>
         </fieldset>
 
@@ -47,23 +45,29 @@
       </section>
 
       <section class="card">
-        <h2>Portföljförslag</h2>
+        <h2>Portföljförslag (klicka på en aktie för graf + TA)</h2>
         <div id="portfolioCards" class="portfolio-cards"></div>
       </section>
 
       <section class="card">
         <h2>Prestanda</h2>
-        <p>
-          Portföljprestanda visas både <strong>YTD</strong> och <strong>sedan start</strong>, och
-          jämförs mot S&amp;P 500.
-        </p>
+        <p>Portföljprestanda visas YTD och sedan start, jämfört med S&amp;P 500.</p>
         <div id="performanceBoard" class="performance-board"></div>
       </section>
     </main>
 
+    <div id="chartModal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="modal-content">
+        <button id="closeModal" class="close">✕</button>
+        <h3 id="modalTitle"></h3>
+        <p id="modalSummary"></p>
+        <div id="chartContainer"></div>
+      </div>
+    </div>
+
     <footer>
       <small>
-        Datakälla i denna demo är simulerad marknadsdata. Uppdatering sker automatiskt varje timme.
+        Data hämtas live från Yahoo Finance API och uppdateras automatiskt varje timme.
       </small>
     </footer>
 

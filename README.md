@@ -1,21 +1,18 @@
 # FinDesk
 
-FinDesk är en enkel webbdashboard för finansiella investeringar.
+FinDesk är en webbdashboard för investeringar med **faktiska marknadsdata** och teknisk analys.
 
 ## Funktioner
 
 - Ange portföljstorlek i SEK.
 - Generera tre portföljförslag med **10**, **20** och **40** aktier.
-- Visar i listformat för varje position:
-  - köppris
-  - antal aktier
-  - stop-loss och/eller glidande stop-loss beroende på vald strategi
 - Välj riskläge:
   - endast stop-loss
   - endast glidande stop-loss
   - båda
 - Begränsa urvalet till valda aktiemarknader.
-- Standardläge inkluderar alla tillgängliga marknader i datamängden (marknader med stop-loss-stöd i Avanza-flödet).
+- Rekommendationer rangordnas med teknisk analys (SMA20/SMA50, RSI, MACD).
+- Klicka på en aktie för att se candlestick-graf i TradingView-liknande stil (Lightweight Charts).
 - Prestanda visas för varje portföljförslag:
   - YTD
   - sedan start
@@ -25,7 +22,7 @@ FinDesk är en enkel webbdashboard för finansiella investeringar.
 ## Kör lokalt
 
 ```bash
-python3 -m http.server 8000
+python3 server.py
 ```
 
 Öppna sedan `http://localhost:8000` i en webbläsare.
