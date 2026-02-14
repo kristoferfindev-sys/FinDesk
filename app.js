@@ -37,9 +37,10 @@ let currentSymbol = null;
 
 const formatSEK = (v) => new Intl.NumberFormat('sv-SE', { style: 'currency', currency: 'SEK', maximumFractionDigits: 2 }).format(v);
 const formatPct = (v) => `${(v * 100).toFixed(2)}%`;
-const avg = (arr) => arr.reduce((s, n) => s + n, 0) / arr.length;
+const avg = (arr) => (arr.length ? arr.reduce((s, n) => s + n, 0) / arr.length : 0);
 
 function sma(values, period) {
+  if (values.length < period) return [];
   const out = [];
   for (let i = period - 1; i < values.length; i += 1) {
     out.push({ index: i, value: avg(values.slice(i - period + 1, i + 1)) });
@@ -48,6 +49,7 @@ function sma(values, period) {
 }
 
 function ema(values, period) {
+  if (!values.length) return [];
   const k = 2 / (period + 1);
   const out = [];
   let prev = values[0];
@@ -73,19 +75,24 @@ function rsi(values, period = 14) {
 }
 
 function macd(values) {
+  if (!values.length) return { macd: 0, signal: 0 };
   const e12 = ema(values, 12);
   const e26 = ema(values, 26);
-  const macdLine = values.map((_, i) => e12[i] - e26[i]);
+  const macdLine = values.map((_, i) => (e12[i] || 0) - (e26[i] || 0));
   const signal = ema(macdLine, 9);
-  return { macd: macdLine.at(-1), signal: signal.at(-1) };
+  return { macd: macdLine.at(-1) || 0, signal: signal.at(-1) || 0 };
 }
 
 function calculateAnalysis(candles) {
+  if (!candles?.length) {
+    return { last: 0, ytd: 0, sinceStart: 0, sma20: 0, sma50: 0, rsi: 50, macd: { macd: 0, signal: 0 }, score: 0 };
+  }
+
   const closes = candles.map((c) => c.close);
   const last = closes.at(-1);
   const ytdStart = candles.find((c) => new Date(c.time * 1000).getUTCMonth() === 0)?.close || closes[0];
-  const sinceStart = (last - closes[0]) / closes[0];
-  const ytd = (last - ytdStart) / ytdStart;
+  const sinceStart = closes[0] ? (last - closes[0]) / closes[0] : 0;
+  const ytd = ytdStart ? (last - ytdStart) / ytdStart : 0;
   const sma20 = sma(closes, 20).at(-1)?.value || last;
   const sma50 = sma(closes, 50).at(-1)?.value || last;
   const rsiVal = rsi(closes);
@@ -105,6 +112,7 @@ async function fetchSymbolData(symbol) {
   const res = await fetch(`/api/ohlc?symbol=${encodeURIComponent(symbol)}`);
   if (!res.ok) throw new Error(`Kunde inte hämta data för ${symbol}`);
   const payload = await res.json();
+  if (!payload.candles?.length) throw new Error(`Ingen prisdata för ${symbol}`);
   const analysis = calculateAnalysis(payload.candles);
   const full = { ...payload, analysis };
   marketDataCache.set(symbol, full);
@@ -132,7 +140,7 @@ function riskText(position, mode) {
 }
 
 function createPosition(stock, capitalPerStock, analysis) {
-  const shares = Math.max(1, Math.floor(capitalPerStock / analysis.last));
+  const shares = analysis.last > 0 ? Math.max(1, Math.floor(capitalPerStock / analysis.last)) : 0;
   return {
     ...stock,
     shares,
@@ -204,36 +212,55 @@ async function generate() {
   const totalCapital = Number(el.portfolioSize.value) || 0;
   const riskMode = el.riskMode.value;
   const markets = selectedMarkets();
-  if (!markets.length) return;
+  if (!markets.length) {
+    el.portfolioCards.innerHTML = '<p>Välj minst en marknad.</p>';
+    el.performanceBoard.innerHTML = '';
+    return;
+  }
 
   el.portfolioCards.innerHTML = '<p>Laddar marknadsdata och teknisk analys...</p>';
-  const ranked = await rankedStocks(markets);
-  const benchmark = (await fetchSymbolData(BENCHMARK_TICKER)).analysis;
-  el.portfolioCards.innerHTML = '';
 
-  const perfResults = [];
-  portfolioSizes.forEach((count) => {
-    const picks = ranked.slice(0, Math.min(count, ranked.length));
-    const perStock = totalCapital / Math.max(picks.length, 1);
-    const positions = picks.map((s) => createPosition(s, perStock, s.data.analysis));
-    el.portfolioCards.appendChild(renderPortfolioCard(count, positions, riskMode));
-    perfResults.push({ count, perf: aggregatePerformance(positions) });
-  });
+  try {
+    const ranked = await rankedStocks(markets);
+    const benchmark = (await fetchSymbolData(BENCHMARK_TICKER)).analysis;
 
-  renderPerformance(perfResults, benchmark);
-  el.lastUpdated.textContent = `Senast uppdaterad: ${new Date().toLocaleString('sv-SE')} (nästa uppdatering om 1h)`;
+    if (!ranked.length) {
+      el.portfolioCards.innerHTML = '<p>Kunde inte läsa marknadsdata just nu. Försök igen om en stund.</p>';
+      el.performanceBoard.innerHTML = '';
+      return;
+    }
+
+    el.portfolioCards.innerHTML = '';
+    const perfResults = [];
+    portfolioSizes.forEach((count) => {
+      const picks = ranked.slice(0, Math.min(count, ranked.length));
+      const perStock = totalCapital / Math.max(picks.length, 1);
+      const positions = picks.map((s) => createPosition(s, perStock, s.data.analysis));
+      el.portfolioCards.appendChild(renderPortfolioCard(count, positions, riskMode));
+      perfResults.push({ count, perf: aggregatePerformance(positions) });
+    });
+
+    renderPerformance(perfResults, benchmark);
+    el.lastUpdated.textContent = `Senast uppdaterad: ${new Date().toLocaleString('sv-SE')} (nästa uppdatering om 1h)`;
+  } catch {
+    el.portfolioCards.innerHTML = '<p>Ett fel uppstod vid hämtning av marknadsdata.</p>';
+    el.performanceBoard.innerHTML = '';
+  }
 }
 
 async function openChartModal(symbol) {
   currentSymbol = symbol;
   const data = await fetchSymbolData(symbol);
-  const candles = data.candles.map((c) => ({
-    time: c.time,
-    open: c.open,
-    high: c.high,
-    low: c.low,
-    close: c.close
-  }));
+
+  if (typeof LightweightCharts === 'undefined') {
+    el.modal.classList.remove('hidden');
+    el.modalTitle.textContent = `${symbol} – graf kunde inte laddas`;
+    el.modalSummary.textContent = 'Chart-biblioteket kunde inte hämtas i den här miljön.';
+    el.chartContainer.innerHTML = '';
+    return;
+  }
+
+  const candles = data.candles.map((c) => ({ time: c.time, open: c.open, high: c.high, low: c.low, close: c.close }));
   const closes = candles.map((c) => c.close);
   const sma20Data = sma(closes, 20).map((p) => ({ time: candles[p.index].time, value: p.value }));
   const sma50Data = sma(closes, 50).map((p) => ({ time: candles[p.index].time, value: p.value }));
@@ -259,7 +286,6 @@ async function openChartModal(symbol) {
   sma20Series.setData(sma20Data);
   const sma50Series = chart.addLineSeries({ color: '#FF6D00', lineWidth: 2, title: 'SMA50' });
   sma50Series.setData(sma50Data);
-
   chart.timeScale().fitContent();
 }
 

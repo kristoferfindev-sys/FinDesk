@@ -26,3 +26,10 @@ python3 server.py
 ```
 
 Öppna sedan `http://localhost:8000` i en webbläsare.
+
+
+## Datakälla
+
+- Appen försöker hämta live-data från Yahoo Finance.
+- Om extern åtkomst blockeras används en lokal fallback-serie så dashboarden fortsätter fungera utan avbrott.
+- Svar cachas i 1 timme på serversidan för stabilare laddning.

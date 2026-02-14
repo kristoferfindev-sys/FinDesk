@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse, parse_qs
-from urllib.request import urlopen
+from urllib.request import urlopen, Request
 import datetime as dt
 import hashlib
 import json
 import math
 import os
+import time
 
 PORT = int(os.environ.get('PORT', '8000'))
+REQUEST_TIMEOUT_S = 6
+CACHE_TTL_S = 60 * 60
 
 SYMBOL_MAP = {
     'AAPL': 'AAPL', 'MSFT': 'MSFT', 'NVDA': 'NVDA', 'META': 'META', 'AMZN': 'AMZN',
@@ -30,6 +33,8 @@ REFERENCE_PRICES = {
     'IBE': 12, 'SQM': 48, 'PBR': 14, 'HDB': 62, 'RELIANCE': 34, 'ENEL': 7, 'ALV': 18, 'RDSA': 33,
     'ROG': 299, 'RACE': 410, 'INFY': 20, 'SPY': 560
 }
+
+CACHE = {}
 
 
 def fallback_ohlc(symbol: str):
@@ -61,7 +66,8 @@ def fallback_ohlc(symbol: str):
 def fetch_yahoo_ohlc(symbol: str):
     mapped = SYMBOL_MAP.get(symbol, symbol)
     url = f"https://query1.finance.yahoo.com/v8/finance/chart/{mapped}?range=1y&interval=1d&events=history"
-    with urlopen(url, timeout=20) as response:
+    req = Request(url, headers={'User-Agent': 'Mozilla/5.0 FinDesk/1.0'})
+    with urlopen(req, timeout=REQUEST_TIMEOUT_S) as response:
         data = json.loads(response.read().decode('utf-8'))
 
     result = data.get('chart', {}).get('result', [])
@@ -72,23 +78,37 @@ def fetch_yahoo_ohlc(symbol: str):
     timestamps = payload.get('timestamp', [])
     quote = payload.get('indicators', {}).get('quote', [{}])[0]
     candles = []
+    opens, highs, lows, closes, volumes = (
+        quote.get('open', []), quote.get('high', []), quote.get('low', []), quote.get('close', []), quote.get('volume', [])
+    )
     for i, ts in enumerate(timestamps):
-        o = quote.get('open', [None])[i] if i < len(quote.get('open', [])) else None
-        h = quote.get('high', [None])[i] if i < len(quote.get('high', [])) else None
-        l = quote.get('low', [None])[i] if i < len(quote.get('low', [])) else None
-        c = quote.get('close', [None])[i] if i < len(quote.get('close', [])) else None
-        v = quote.get('volume', [0])[i] if i < len(quote.get('volume', [])) else 0
+        o = opens[i] if i < len(opens) else None
+        h = highs[i] if i < len(highs) else None
+        l = lows[i] if i < len(lows) else None
+        c = closes[i] if i < len(closes) else None
+        v = volumes[i] if i < len(volumes) else 0
         if None in (o, h, l, c):
             continue
         candles.append({'time': int(ts), 'open': float(o), 'high': float(h), 'low': float(l), 'close': float(c), 'volume': int(v or 0)})
 
     if not candles:
-        candles = fallback_ohlc(symbol)
-        source = 'fallback'
-    else:
-        source = 'yahoo'
+        return {'symbol': symbol, 'mapped': mapped, 'candles': fallback_ohlc(symbol), 'source': 'fallback'}
+    return {'symbol': symbol, 'mapped': mapped, 'candles': candles, 'source': 'yahoo'}
 
-    return {'symbol': symbol, 'mapped': mapped, 'candles': candles, 'source': source}
+
+def get_symbol_data(symbol: str):
+    now = time.time()
+    cached = CACHE.get(symbol)
+    if cached and now - cached['ts'] < CACHE_TTL_S:
+        return cached['data']
+
+    try:
+        data = fetch_yahoo_ohlc(symbol)
+    except Exception:
+        data = {'symbol': symbol, 'mapped': SYMBOL_MAP.get(symbol, symbol), 'candles': fallback_ohlc(symbol), 'source': 'fallback'}
+
+    CACHE[symbol] = {'ts': now, 'data': data}
+    return data
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -108,10 +128,7 @@ class Handler(BaseHTTPRequestHandler):
             if not symbol:
                 self._json({'error': 'missing symbol'}, 400)
                 return
-            try:
-                self._json(fetch_yahoo_ohlc(symbol))
-            except Exception:
-                self._json({'symbol': symbol, 'mapped': SYMBOL_MAP.get(symbol, symbol), 'candles': fallback_ohlc(symbol), 'source': 'fallback'})
+            self._json(get_symbol_data(symbol))
             return
 
         if parsed.path in ('/', '/index.html'):
