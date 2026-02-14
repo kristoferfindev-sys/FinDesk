@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="sv">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FinDesk – Investeringsdashboard</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <h1>FinDesk – Investeringsdashboard</h1>
+      <p>
+        Bygg förslag på portföljer med tydliga köp- och risknivåer, samt jämförelse mot
+        S&amp;P 500.
+      </p>
+      <p class="meta" id="lastUpdated"></p>
+    </header>
+
+    <main>
+      <section class="controls card">
+        <h2>Inställningar</h2>
+        <div class="control-grid">
+          <label>
+            Portföljstorlek (SEK)
+            <input id="portfolioSize" type="number" min="10000" step="10000" value="1000000" />
+          </label>
+
+          <label>
+            Riskhantering
+            <select id="riskMode">
+              <option value="stop">Endast stop-loss</option>
+              <option value="trailing">Endast glidande stop-loss</option>
+              <option value="both" selected>Båda</option>
+            </select>
+          </label>
+        </div>
+
+        <fieldset>
+          <legend>Marknader (standard: alla med stöd för stop-loss på Avanza)</legend>
+          <div id="marketFilters" class="market-filters"></div>
+        </fieldset>
+
+        <div class="actions">
+          <button id="generateBtn">Generera portföljförslag</button>
+          <button id="resetBtn" class="secondary">Återställ standard</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Portföljförslag</h2>
+        <div id="portfolioCards" class="portfolio-cards"></div>
+      </section>
+
+      <section class="card">
+        <h2>Prestanda</h2>
+        <p>
+          Portföljprestanda visas både <strong>YTD</strong> och <strong>sedan start</strong>, och
+          jämförs mot S&amp;P 500.
+        </p>
+        <div id="performanceBoard" class="performance-board"></div>
+      </section>
+    </main>
+
+    <footer>
+      <small>
+        Datakälla i denna demo är simulerad marknadsdata. Uppdatering sker automatiskt varje timme.
+      </small>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>
