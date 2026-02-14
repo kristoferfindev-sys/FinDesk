@@ -34,3 +34,6 @@ python3 server.py
 - Om extern åtkomst blockeras används en lokal fallback-serie så dashboarden fortsätter fungera utan avbrott.
 - Om `/api/ohlc` inte finns (t.ex. om man råkar köra en statisk server) använder frontend också en lokal fallback, så sidan visar fortfarande portföljförslag.
 - Svar cachas i 1 timme på serversidan för stabilare laddning.
+
+- Tips: kontrollera `http://localhost:8000/api/health` för att verifiera att backend-servern kör.
+- Om Yahoo-blockering uppstår returneras fallback med `liveError` i API-svaret för enklare felsökning.

@@ -318,7 +318,8 @@ async function openChartModal(symbol) {
   const sma50Data = sma(closes, 50).map((p) => ({ time: candles[p.index].time, value: p.value }));
 
   el.modalTitle.textContent = `${symbol} – Candle sticks & teknisk analys`;
-  el.modalSummary.textContent = `Källa: ${data.source === 'yahoo' ? 'Yahoo Finance (live)' : 'Lokal fallback'} · RSI(14): ${data.analysis.rsi.toFixed(2)} · MACD: ${data.analysis.macd.macd.toFixed(3)} / Signal: ${data.analysis.macd.signal.toFixed(3)}`;
+  const sourceText = data.source === 'yahoo' ? 'Yahoo Finance (live)' : `Lokal fallback${data.liveError ? ` (${data.liveError})` : ''}`;
+  el.modalSummary.textContent = `Källa: ${sourceText} · RSI(14): ${data.analysis.rsi.toFixed(2)} · MACD: ${data.analysis.macd.macd.toFixed(3)} / Signal: ${data.analysis.macd.signal.toFixed(3)}`;
 
   chart = LightweightCharts.createChart(el.chartContainer, {
     layout: { background: { color: '#ffffff' }, textColor: '#1f2a44' },

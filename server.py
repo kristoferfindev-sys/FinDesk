@@ -2,6 +2,7 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse, parse_qs
 from urllib.request import urlopen, Request
+from urllib.error import URLError, HTTPError
 import datetime as dt
 import hashlib
 import json
@@ -10,8 +11,9 @@ import os
 import time
 
 PORT = int(os.environ.get('PORT', '8000'))
-REQUEST_TIMEOUT_S = 6
+REQUEST_TIMEOUT_S = 8
 CACHE_TTL_S = 60 * 60
+YAHOO_RETRIES = 2
 
 SYMBOL_MAP = {
     'AAPL': 'AAPL', 'MSFT': 'MSFT', 'NVDA': 'NVDA', 'META': 'META', 'AMZN': 'AMZN',
@@ -63,24 +65,21 @@ def fallback_ohlc(symbol: str):
     return candles
 
 
-def fetch_yahoo_ohlc(symbol: str):
-    mapped = SYMBOL_MAP.get(symbol, symbol)
-    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{mapped}?range=1y&interval=1d&events=history"
-    req = Request(url, headers={'User-Agent': 'Mozilla/5.0 FinDesk/1.0'})
-    with urlopen(req, timeout=REQUEST_TIMEOUT_S) as response:
-        data = json.loads(response.read().decode('utf-8'))
-
+def parse_yahoo_chart_response(data: dict):
     result = data.get('chart', {}).get('result', [])
     if not result:
-        return {'symbol': symbol, 'mapped': mapped, 'candles': fallback_ohlc(symbol), 'source': 'fallback'}
+        raise ValueError('No chart result in Yahoo payload')
 
     payload = result[0]
     timestamps = payload.get('timestamp', [])
     quote = payload.get('indicators', {}).get('quote', [{}])[0]
+    opens = quote.get('open', [])
+    highs = quote.get('high', [])
+    lows = quote.get('low', [])
+    closes = quote.get('close', [])
+    volumes = quote.get('volume', [])
+
     candles = []
-    opens, highs, lows, closes, volumes = (
-        quote.get('open', []), quote.get('high', []), quote.get('low', []), quote.get('close', []), quote.get('volume', [])
-    )
     for i, ts in enumerate(timestamps):
         o = opens[i] if i < len(opens) else None
         h = highs[i] if i < len(highs) else None
@@ -89,11 +88,55 @@ def fetch_yahoo_ohlc(symbol: str):
         v = volumes[i] if i < len(volumes) else 0
         if None in (o, h, l, c):
             continue
-        candles.append({'time': int(ts), 'open': float(o), 'high': float(h), 'low': float(l), 'close': float(c), 'volume': int(v or 0)})
+        candles.append({
+            'time': int(ts),
+            'open': float(o),
+            'high': float(h),
+            'low': float(l),
+            'close': float(c),
+            'volume': int(v or 0)
+        })
 
     if not candles:
-        return {'symbol': symbol, 'mapped': mapped, 'candles': fallback_ohlc(symbol), 'source': 'fallback'}
-    return {'symbol': symbol, 'mapped': mapped, 'candles': candles, 'source': 'yahoo'}
+        raise ValueError('Yahoo returned no valid OHLC candles')
+    return candles
+
+
+def fetch_yahoo_ohlc(symbol: str):
+    mapped = SYMBOL_MAP.get(symbol, symbol)
+    endpoints = [
+        f'https://query1.finance.yahoo.com/v8/finance/chart/{mapped}?range=1y&interval=1d&events=history&includePrePost=false',
+        f'https://query2.finance.yahoo.com/v8/finance/chart/{mapped}?range=1y&interval=1d&events=history&includePrePost=false'
+    ]
+
+    last_error = 'unknown'
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123 Safari/537.36',
+        'Accept': 'application/json,text/plain,*/*',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Connection': 'keep-alive',
+        'Referer': 'https://finance.yahoo.com/'
+    }
+
+    for endpoint in endpoints:
+        for attempt in range(1, YAHOO_RETRIES + 1):
+            try:
+                req = Request(endpoint, headers=headers)
+                with urlopen(req, timeout=REQUEST_TIMEOUT_S) as response:
+                    payload = json.loads(response.read().decode('utf-8'))
+                candles = parse_yahoo_chart_response(payload)
+                return {'symbol': symbol, 'mapped': mapped, 'candles': candles, 'source': 'yahoo'}
+            except (HTTPError, URLError, TimeoutError, ValueError, json.JSONDecodeError) as exc:
+                last_error = f'{type(exc).__name__}: {exc}'
+                time.sleep(0.2 * attempt)
+
+    return {
+        'symbol': symbol,
+        'mapped': mapped,
+        'candles': fallback_ohlc(symbol),
+        'source': 'fallback',
+        'liveError': last_error
+    }
 
 
 def get_symbol_data(symbol: str):
@@ -102,11 +145,7 @@ def get_symbol_data(symbol: str):
     if cached and now - cached['ts'] < CACHE_TTL_S:
         return cached['data']
 
-    try:
-        data = fetch_yahoo_ohlc(symbol)
-    except Exception:
-        data = {'symbol': symbol, 'mapped': SYMBOL_MAP.get(symbol, symbol), 'candles': fallback_ohlc(symbol), 'source': 'fallback'}
-
+    data = fetch_yahoo_ohlc(symbol)
     CACHE[symbol] = {'ts': now, 'data': data}
     return data
 
@@ -129,6 +168,10 @@ class Handler(BaseHTTPRequestHandler):
                 self._json({'error': 'missing symbol'}, 400)
                 return
             self._json(get_symbol_data(symbol))
+            return
+
+        if parsed.path == '/api/health':
+            self._json({'status': 'ok', 'cacheSize': len(CACHE), 'timestamp': int(time.time())})
             return
 
         if parsed.path in ('/', '/index.html'):
