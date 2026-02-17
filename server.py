@@ -14,6 +14,7 @@ PORT = int(os.environ.get('PORT', '8000'))
 REQUEST_TIMEOUT_S = 8
 CACHE_TTL_S = 60 * 60
 YAHOO_RETRIES = 2
+STOOQ_RETRIES = 2
 
 SYMBOL_MAP = {
     'AAPL': 'AAPL', 'MSFT': 'MSFT', 'NVDA': 'NVDA', 'META': 'META', 'AMZN': 'AMZN',
@@ -25,6 +26,13 @@ SYMBOL_MAP = {
     'IBE': 'IBE.MC', 'SQM': 'SQM', 'PBR': 'PBR', 'HDB': 'HDB', 'RELIANCE': 'RELIANCE.NS',
     'ENEL': 'ENEL.MI', 'ALV': 'CA.PA', 'RDSA': 'SHEL.AS', 'ROG': 'ROG.SW', 'RACE': 'RACE.MI',
     'INFY': 'INFY', 'SPY': 'SPY'
+}
+
+STOOQ_MAP = {
+    'AAPL': 'aapl.us', 'MSFT': 'msft.us', 'NVDA': 'nvda.us', 'META': 'meta.us', 'AMZN': 'amzn.us',
+    'ORCL': 'orcl.us', 'LIN': 'lin.us', 'MELI': 'meli.us', 'TSM': 'tsm.us', 'SONY': 'sony.us',
+    'SHOP': 'shop.us', 'SU': 'su.us', 'PBR': 'pbr.us', 'HDB': 'hdb.us', 'INFY': 'infy.us',
+    'UL': 'ul.us', 'SAN': 'san.us', 'SQM': 'sqm.us', 'RIO': 'rio.us', 'NVO': 'nvo.us', 'SPY': 'spy.us'
 }
 
 REFERENCE_PRICES = {
@@ -73,13 +81,14 @@ def parse_yahoo_chart_response(data: dict):
     payload = result[0]
     timestamps = payload.get('timestamp', [])
     quote = payload.get('indicators', {}).get('quote', [{}])[0]
+
+    candles = []
     opens = quote.get('open', [])
     highs = quote.get('high', [])
     lows = quote.get('low', [])
     closes = quote.get('close', [])
     volumes = quote.get('volume', [])
 
-    candles = []
     for i, ts in enumerate(timestamps):
         o = opens[i] if i < len(opens) else None
         h = highs[i] if i < len(highs) else None
@@ -88,14 +97,7 @@ def parse_yahoo_chart_response(data: dict):
         v = volumes[i] if i < len(volumes) else 0
         if None in (o, h, l, c):
             continue
-        candles.append({
-            'time': int(ts),
-            'open': float(o),
-            'high': float(h),
-            'low': float(l),
-            'close': float(c),
-            'volume': int(v or 0)
-        })
+        candles.append({'time': int(ts), 'open': float(o), 'high': float(h), 'low': float(l), 'close': float(c), 'volume': int(v or 0)})
 
     if not candles:
         raise ValueError('Yahoo returned no valid OHLC candles')
@@ -108,8 +110,6 @@ def fetch_yahoo_ohlc(symbol: str):
         f'https://query1.finance.yahoo.com/v8/finance/chart/{mapped}?range=1y&interval=1d&events=history&includePrePost=false',
         f'https://query2.finance.yahoo.com/v8/finance/chart/{mapped}?range=1y&interval=1d&events=history&includePrePost=false'
     ]
-
-    last_error = 'unknown'
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123 Safari/537.36',
         'Accept': 'application/json,text/plain,*/*',
@@ -118,6 +118,7 @@ def fetch_yahoo_ohlc(symbol: str):
         'Referer': 'https://finance.yahoo.com/'
     }
 
+    last_error = 'unknown'
     for endpoint in endpoints:
         for attempt in range(1, YAHOO_RETRIES + 1):
             try:
@@ -130,13 +131,58 @@ def fetch_yahoo_ohlc(symbol: str):
                 last_error = f'{type(exc).__name__}: {exc}'
                 time.sleep(0.2 * attempt)
 
-    return {
-        'symbol': symbol,
-        'mapped': mapped,
-        'candles': fallback_ohlc(symbol),
-        'source': 'fallback',
-        'liveError': last_error
+    raise RuntimeError(last_error)
+
+
+def fetch_stooq_ohlc(symbol: str):
+    mapped = STOOQ_MAP.get(symbol)
+    if not mapped:
+        raise ValueError('No Stooq mapping for symbol')
+
+    url = f'https://stooq.com/q/d/l/?s={mapped}&i=d'
+    headers = {
+        'User-Agent': 'Mozilla/5.0',
+        'Accept': 'text/csv,*/*',
+        'Referer': 'https://stooq.com/'
     }
+
+    last_error = 'unknown'
+    for attempt in range(1, STOOQ_RETRIES + 1):
+        try:
+            req = Request(url, headers=headers)
+            with urlopen(req, timeout=REQUEST_TIMEOUT_S) as response:
+                text = response.read().decode('utf-8').strip()
+            rows = [r.strip() for r in text.splitlines() if r.strip()]
+            if len(rows) <= 1:
+                raise ValueError('Stooq returned no rows')
+
+            candles = []
+            for row in rows[1:]:
+                parts = row.split(',')
+                if len(parts) < 6:
+                    continue
+                date_s, open_s, high_s, low_s, close_s, volume_s = parts[:6]
+                if 'N/D' in (open_s, high_s, low_s, close_s):
+                    continue
+                dt_obj = dt.datetime.strptime(date_s, '%Y-%m-%d').replace(tzinfo=dt.timezone.utc)
+                candles.append({
+                    'time': int(dt_obj.timestamp()),
+                    'open': float(open_s),
+                    'high': float(high_s),
+                    'low': float(low_s),
+                    'close': float(close_s),
+                    'volume': int(float(volume_s)) if volume_s not in ('', 'N/D') else 0
+                })
+
+            if not candles:
+                raise ValueError('Stooq returned no valid OHLC candles')
+
+            return {'symbol': symbol, 'mapped': mapped, 'candles': candles, 'source': 'stooq'}
+        except (HTTPError, URLError, TimeoutError, ValueError) as exc:
+            last_error = f'{type(exc).__name__}: {exc}'
+            time.sleep(0.2 * attempt)
+
+    raise RuntimeError(last_error)
 
 
 def get_symbol_data(symbol: str):
@@ -145,7 +191,24 @@ def get_symbol_data(symbol: str):
     if cached and now - cached['ts'] < CACHE_TTL_S:
         return cached['data']
 
-    data = fetch_yahoo_ohlc(symbol)
+    errors = []
+
+    try:
+        data = fetch_yahoo_ohlc(symbol)
+    except Exception as exc:
+        errors.append(f'Yahoo: {exc}')
+        try:
+            data = fetch_stooq_ohlc(symbol)
+        except Exception as exc2:
+            errors.append(f'Stooq: {exc2}')
+            data = {
+                'symbol': symbol,
+                'mapped': SYMBOL_MAP.get(symbol, symbol),
+                'candles': fallback_ohlc(symbol),
+                'source': 'fallback',
+                'liveError': ' | '.join(errors)
+            }
+
     CACHE[symbol] = {'ts': now, 'data': data}
     return data
 
@@ -197,5 +260,5 @@ class Handler(BaseHTTPRequestHandler):
 
 if __name__ == '__main__':
     server = HTTPServer(('0.0.0.0', PORT), Handler)
-    print(f'FinDesk running on http://0.0.0.0:{PORT}')
+    print(f'FinDesk v0.4 running on http://0.0.0.0:{PORT}')
     server.serve_forever()

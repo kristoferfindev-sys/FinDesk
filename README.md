@@ -1,4 +1,4 @@
-# FinDesk
+# FinDesk v0.4
 
 FinDesk är en webbdashboard för investeringar med **faktiska marknadsdata** och teknisk analys.
 
@@ -30,7 +30,8 @@ python3 server.py
 
 ## Datakälla
 
-- Appen försöker hämta live-data från Yahoo Finance.
+- Appen försöker hämta live-data från Yahoo Finance (primär källa).
+- Om Yahoo misslyckas testas Stooq som sekundär live-källa.
 - Om extern åtkomst blockeras används en lokal fallback-serie så dashboarden fortsätter fungera utan avbrott.
 - Om `/api/ohlc` inte finns (t.ex. om man råkar köra en statisk server) använder frontend också en lokal fallback, så sidan visar fortfarande portföljförslag.
 - Svar cachas i 1 timme på serversidan för stabilare laddning.
